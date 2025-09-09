@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: security_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin123!
+    ports:
+      - "5332:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - sso-network
+
+  sso-service:
+    build: .
+    ports:
+      - "2080:2080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/security_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=admin123!
+      - EMAIL_HOST=sandbox.smtp.mailtrap.io
+      - EMAIL_PORT=587
+      - EMAIL_USERNAME=446b3b504773ad
+      - EMAIL_PASSWORD=a5b8a14aa6b496
+      - LINKEDIN_CLIENT_ID=your-linkedin-client-id
+      - LINKEDIN_CLIENT_SECRET=your-linkedin-client-secret
+    depends_on:
+      - postgres
+    networks:
+      - sso-network
+    volumes:
+      - ./certificates:/app/certificates
+
+  demo-app:
+    image: nginx:alpine
+    ports:
+      - "3000:80"
+    volumes:
+      - ./demo-app:/usr/share/nginx/html
+    networks:
+      - sso-network
+
+volumes:
+  postgres_data:
+
+networks:
+  sso-network:
+    driver: bridge
