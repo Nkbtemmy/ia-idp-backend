@@ -23,8 +23,8 @@ A comprehensive Spring Boot-based Identity Provider (IdP) with JWT authenticatio
 ### 1. Clone the Repository
 
 ```sh
-git clone git@github.com:Nkbtemmy/SSO-Service.git
-cd SSO-Service
+git clone git@github.com:Nkbtemmy/ia-idp-backend.git
+cd ia-idp-backend
 ```
 
 ### 2. Generate RSA Keys
