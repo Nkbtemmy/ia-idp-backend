@@ -59,7 +59,7 @@ public class EmailVerificationService {
             verificationTokenRepository.save(verificationToken);
 
             // Send email
-            String verificationUrl = frontendUrl + "/verify-email?token=" + token;
+            String verificationUrl = frontendUrl + "/verify-email.html?token=" + token;
             sendEmail(user.getEmail(), "Verify Your Email Address", 
                      createVerificationEmailContent(user.getName() != null ? user.getName() : user.getEmail(), verificationUrl));
 
