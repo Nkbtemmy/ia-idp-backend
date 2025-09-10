@@ -25,6 +25,7 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class JwtService {
@@ -185,18 +186,28 @@ public DecodedJWT validateToken(String token) throws Exception {
         return accessTokenExpiration;
     }
 
-@NotNull
-public Map<String, Object> getTokenPayload(TokenDto token) {
-    String tokens = token.getToken();
-    verifyJwtToken(tokens);
-    String[] chunks = tokens.split("\\.");
-    Base64.Decoder decoder = Base64.getUrlDecoder();
-    String payloadJson = new String(decoder.decode(chunks[1]));
-    ObjectMapper objectMapper = new ObjectMapper();
-    try {
-        return objectMapper.readValue(payloadJson, new TypeReference<Map<String, Object>>() {});
-    } catch (IOException e) {
-        throw new RuntimeException("Failed to parse token payload", e);
+//@NotNull
+//public Map<String, Object> getTokenPayload(TokenDto token) {
+//    String tokens = token.getToken();
+//    verifyJwtToken(tokens);
+//    String[] chunks = tokens.split("\\.");
+//    Base64.Decoder decoder = Base64.getUrlDecoder();
+//    String payloadJson = new String(decoder.decode(chunks[1]));
+//    ObjectMapper objectMapper = new ObjectMapper();
+//    try {
+//        return objectMapper.readValue(payloadJson, new TypeReference<Map<String, Object>>() {});
+//    } catch (IOException e) {
+//        throw new RuntimeException("Failed to parse token payload", e);
+//    }
+//}
+
+    @NotNull
+    public Map<String, Object> getTokenPayload(String token) throws Exception {
+        DecodedJWT decodedJWT = validateToken(token);
+        return decodedJWT.getClaims().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().as(Object.class)));
     }
-}
+    public long getRefreshTokenExpiration() {
+        return refreshTokenExpiration;
+    }
 }

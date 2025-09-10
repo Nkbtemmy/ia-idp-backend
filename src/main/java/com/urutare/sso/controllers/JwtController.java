@@ -38,7 +38,7 @@ public class JwtController {
     @PostMapping("/verify")
     public ResponseEntity<Map<String, Object>> verifyToken(@RequestBody TokenDto payload) {
         try {
-            Map<String, Object> result = jwtService.getTokenPayload(payload);
+            Map<String, Object> result = jwtService.getTokenPayload(payload.getToken());
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             Map<String, Object> error = new HashMap<>();
