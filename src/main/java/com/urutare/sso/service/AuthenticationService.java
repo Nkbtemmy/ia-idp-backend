@@ -56,17 +56,17 @@ public class AuthenticationService {
                 .build();
 
         user = userRepository.save(user);
-        log.info("New user registered--------------: {}", user.getEmail());
+        log.info("New user registered: {}", user.getEmail());
 //        String token =
         // Send verification email
-//        emailVerificationService.sendVerificationEmail(user);
+        emailVerificationService.sendVerificationEmail(user);
 
         // Generate tokens (user can use the app but with limited access until verified)
         return generateAuthResponse(user);
     }
 
     @Transactional
-    public AuthResponse login(LoginRequest request) {
+    public AuthResponse login(RegisterRequest request) {
         try {
             // Authenticate user
             Authentication authentication = authenticationManager.authenticate(

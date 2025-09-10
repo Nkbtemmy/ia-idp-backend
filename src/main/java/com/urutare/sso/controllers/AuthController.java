@@ -46,7 +46,7 @@ public class AuthController {
 
     @Operation(summary = "User Login", description = "Authenticate user with email and password")
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@Valid @RequestBody RegisterRequest request) {
         try {
             AuthResponse response = authenticationService.login(request);
             return ResponseEntity.ok(ApiResponse.ok("Login successful", response));
