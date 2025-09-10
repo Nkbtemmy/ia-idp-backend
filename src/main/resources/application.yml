@@ -1,0 +1,140 @@
+server:
+  port: 2080
+# Application Configuration
+app:
+  name: ${APP_NAME:SSO Service}
+  frontend:
+    url: ${FRONTEND_URL:http://localhost:3000}
+
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000}
+    allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,OPTIONS}
+    allowed-headers: ${CORS_ALLOWED_HEADERS:*}
+    allow-credentials: ${CORS_ALLOW_CREDENTIALS:true}
+    max-age: ${CORS_MAX_AGE:3600}
+
+  verification:
+    token:
+      expiration: ${VERIFICATION_TOKEN_EXPIRATION:24} # hours
+
+spring:
+  application:
+    name: SSO
+  datasource:
+    url: "jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:security_db}"
+    username: "${DB_USER:postgres}"
+    password: "${DB_PASSWORD:admin123!}"
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      auto-commit: true
+      idle-timeout: 30000
+      pool-name: HikariPool-Dev
+      connection-timeout: 20000
+      validation-timeout: 5000
+      connection-test-query: SELECT 1
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect # Optional, auto-detected
+    show-sql: false
+    hibernate:
+      ddl-auto: ${DATABASE_DDL_AUTO:update}
+    properties:
+      hibernate:
+        enable_lazy_load_no_trans: true
+        jdbc:
+          batch_size: 0
+
+
+  mail:
+    host: "${EMAIL_HOST:sandbox.smtp.mailtrap.io}"
+    port: "${EMAIL_PORT:587}"
+    username: "${EMAIL_USERNAME: 446b3b504773ad}"
+    password: "${EMAIL_PASSWORD: a5b8a14aa6b496}"
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  security:
+    oauth2:
+      client:
+        registration:
+          linkedin:
+            client-id: "${LINKEDIN_CLIENT_ID:7734567rewwdp}"
+            client-secret: "${LINKEDIN_CLIENT_SECRET:WPL_AP1.N897657jhQ.bDrUJA==t}"
+            client-name: LinkedIn
+            authorization-grant-type: authorization_code
+            redirect-uri: ${LINKEDIN_REDIRECT_URI:http://localhost:8080/api/v1/sso-service/auth/linkedin/callback}
+#            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - r_liteprofile
+              - r_emailaddress
+        provider:
+          linkedin:
+            authorization-uri: https://www.linkedin.com/oauth/v2/authorization
+            token-uri: https://www.linkedin.com/oauth/v2/accessToken
+#            user-info-uri: https://api.linkedin.com/v2/me
+            user-info-uri: https://api.linkedin.com/v2/people/~:(id,firstName,lastName)
+            user-name-attribute: id
+
+
+#private:
+#  key:
+#    path: certificates/private_key.pem
+#    password: yourpassword
+#public:
+#  key:
+#    path: certificates/public_key.pem
+
+# Key paths (relative to classpath)
+private:
+  key:
+    path: ${PRIVATE_KEY_PATH:keys/private_key.pem}
+    password: ${PRIVATE_KEY_PASSWORD:your-private-key-password}
+public:
+  key:
+    path: ${PUBLIC_KEY_PATH:keys/public_key.pem}
+
+jwt:
+  issuer: issub2sds
+  access-token:
+    expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:3600000} # 1 hour in milliseconds
+  refresh-token:
+    expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000} # 7 days in milliseconds
+
+# LinkedIn OAuth URLs
+linkedin:
+  oauth:
+    token-url: https://www.linkedin.com/oauth/v2/accessToken
+    user-info-url: https://api.linkedin.com/v2/people/~:(id,firstName,lastName)
+    email-url: https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))
+
+
+# Logging
+logging:
+  level:
+    com.urutare.sso: ${LOG_LEVEL:INFO}
+    org.springframework.security: ${SECURITY_LOG_LEVEL:INFO}
+    org.springframework.web: ${WEB_LOG_LEVEL:INFO}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Swagger/OpenAPI
+springdoc:
+  api-docs:
+    path: /api/v1/sso-service/docs
+  swagger-ui:
+    path: /api/v1/sso-service/swagger-ui.html
+
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized

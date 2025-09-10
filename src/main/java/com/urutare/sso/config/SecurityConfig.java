@@ -13,18 +13,22 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
   private final UserService userService;
+  private final CorsConfigurationSource corsConfigurationSource;
 
-  public SecurityConfig(UserService userService) {
+  public SecurityConfig(UserService userService, CorsConfigurationSource corsConfigurationSource) {
     this.userService = userService;
+    this.corsConfigurationSource = corsConfigurationSource;
   }
 
   List<String> publicPaths = List.of(
@@ -33,26 +37,25 @@ public class SecurityConfig {
         "/api/v1/sso-service/swagger-ui/**",
         "/error",
         "/actuator/health",
-         "/.well-known/**"
+        "/.well-known/**",
+        "/verified.html"
   );
 
   @Bean
   public SecurityFilterChain appSecurityFilterChain(HttpSecurity http) throws Exception {
     http
+      .cors(cors -> cors.configurationSource(corsConfigurationSource))
+      .csrf(csrf -> csrf.disable())
+      .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
       .authorizeHttpRequests(auth -> auth
-        .requestMatchers("/**").permitAll()
-      )     
-      // .authorizeHttpRequests(auth -> auth
-      //   .requestMatchers(publicPaths.toArray(new String[0])).permitAll()
-      //   .anyRequest().authenticated()
-      // )
-      .formLogin(Customizer.withDefaults())
+        .requestMatchers(publicPaths.toArray(new String[0])).permitAll()
+        .anyRequest().authenticated()
+      )
       .oauth2Login(oauth -> oauth
         .loginPage("/login")
         .userInfoEndpoint(ui -> ui.userService(userService.oauth2UserService()))
         .successHandler(userService.oauth2SuccessHandler())
-      )
-      .csrf(csrf -> csrf.ignoringRequestMatchers("/api/auth/**"));
+      );
 
     return http.build();
   }

@@ -1,22 +1,44 @@
-# EduBudget SSO - Identity Provider System
+# SSO-Service
 
-A comprehensive Spring Boot-based Identity Provider (IdP) with JWT authentication, OAuth2 integration, and role-based authorization. Includes a complete high school budget management demo application.
+A comprehensive Single Sign-On (SSO) authentication service built with Spring Boot, featuring email/password registration with verification, JWT token authentication using RSA keys, and LinkedIn OAuth integration.
 
-## 🚀 Features
+## Features
 
-### Core IdP Functionality
-- **JWT Authentication**: RSA256-signed access tokens (15min) and refresh tokens (7 days)
-- **Email + Password Authentication**: With mandatory email verification
-- **LinkedIn OAuth2 Integration**: Social login support
-- **JWKS Endpoint**: Public key distribution for token verification
-- **Client Registration**: OAuth2 client authentication with Client ID/Secret
-- **Role-Based Authorization**: Admin and User roles with hierarchical permissions
+- **Email/Password Authentication**: User registration and login with secure password hashing
+- **Email Verification**: Account verification via email with secure tokens
+- **JWT Authentication**: Access and refresh tokens using RSA private/public key cryptography
+- **LinkedIn OAuth**: Social login integration with LinkedIn
+- **CORS Configuration**: Configurable cross-origin resource sharing
+- **Security**: Stateless session management, CSRF protection disabled for APIs
+- **Database**: PostgreSQL with JPA/Hibernate
+- **Email Service**: SMTP email sending with Thymeleaf templates
 
-## Requirements
+## API Endpoints
 
-- Java 17+
+### Authentication Endpoints
+- `POST /api/v1/sso-service/auth/register` - User registration
+- `POST /api/v1/sso-service/auth/login` - User login
+- `POST /api/v1/sso-service/auth/refresh` - Refresh JWT token
+- `POST /api/v1/sso-service/auth/logout` - Logout (revoke refresh token)
+- `POST /api/v1/sso-service/auth/logout-all` - Logout from all devices
+- `GET /api/v1/sso-service/auth/verify` - Email verification
+- `POST /api/v1/sso-service/auth/resend-verification` - Resend verification email
+- `POST /api/v1/sso-service/auth/validate-token` - Validate JWT token
+- `GET /api/v1/sso-service/auth/check-email` - Check email availability
+
+### LinkedIn OAuth Endpoints
+- `GET /api/v1/sso-service/auth/linkedin/login` - Initiate LinkedIn OAuth
+- `GET /api/v1/sso-service/auth/linkedin/callback` - LinkedIn OAuth callback
+- `GET /api/v1/sso-service/auth/linkedin/status` - OAuth status
+
+## Setup Instructions
+
+### Prerequisites
+- Java 17 or higher
 - Maven 3.6+
-- Spring Boot
+- PostgreSQL database
+- SMTP email server access
+- LinkedIn Developer App (for OAuth)
 
 ## Setup
 

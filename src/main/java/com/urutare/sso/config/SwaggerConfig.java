@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Configuration;
         ),
         servers = {
                 @Server(url = "http://localhost:2080", description = "Local Development Server"),
-                @Server(url = "https://api.urutare.com", description = "Production Server")
+                @Server(url = "https://ia-idp-backend.onrender.com", description = "Production Server")
         }
 )
 @Configuration

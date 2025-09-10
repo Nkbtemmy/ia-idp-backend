@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.urutare.sso.dto.TokenDto;
 import com.urutare.sso.dto.TokenRequest;
+import com.urutare.sso.entity.UserAccount;
 import com.urutare.sso.utils.KeyLoader;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,9 +20,11 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class JwtService {
@@ -38,6 +41,12 @@ public class JwtService {
     @Value("${jwt.issuer}")
     private String issuer;
 
+    @Value("${jwt.access-token.expiration:3600000}") // 1 hour default
+    private long accessTokenExpiration;
+
+    @Value("${jwt.refresh-token.expiration:604800000}") // 7 days default
+    private long refreshTokenExpiration;
+
     private RSAPublicKey getPublicKey() throws Exception {
         Resource resource = new ClassPathResource(publicKeyPath);
         return (RSAPublicKey) KeyLoader.loadPublicKey(resource.getInputStream());
@@ -48,19 +57,50 @@ public class JwtService {
         return (RSAPrivateKey) KeyLoader.loadPrivateKey(resource.getInputStream(), privateKeyPassword);
     }
 
+    public String generateAccessToken(UserAccount user) throws Exception {
+        RSAPrivateKey privateKey = getPrivateKey();
+        Algorithm rsaAlgorithm = Algorithm.RSA256(null, privateKey);
+
+        return JWT.create()
+                .withSubject(user.getEmail())
+                .withIssuer(issuer)
+                .withClaim("userId", user.getId().toString())
+                .withClaim("email", user.getEmail())
+                .withClaim("name", user.getName())
+                .withClaim("roles", user.getRoles().stream().map(Enum::name).toList())
+                .withClaim("provider", user.getProvider().name())
+                .withClaim("emailVerified", user.isEmailVerified())
+                .withClaim("type", "access")
+                .withIssuedAt(new Date())
+                .withExpiresAt(new Date(System.currentTimeMillis() + accessTokenExpiration))
+                .sign(rsaAlgorithm);
+    }
+
+    public String generateRefreshToken(UserAccount user) throws Exception {
+        RSAPrivateKey privateKey = getPrivateKey();
+        Algorithm rsaAlgorithm = Algorithm.RSA256(null, privateKey);
+
+        return JWT.create()
+                .withSubject(user.getEmail())
+                .withIssuer(issuer)
+                .withClaim("userId", user.getId().toString())
+                .withClaim("type", "refresh")
+                .withIssuedAt(new Date())
+                .withExpiresAt(new Date(System.currentTimeMillis() + refreshTokenExpiration))
+                .sign(rsaAlgorithm);
+    }
+
     public String generateToken(TokenRequest subject) throws Exception {
         RSAPrivateKey privateKey = getPrivateKey();
         Algorithm rsaAlgorithm = Algorithm.RSA256(null, privateKey);
 
         ObjectMapper objectMapper = new ObjectMapper();
-        String subjectValue = subject.getSubject(); // Still used as the JWT subject
-
-        // Serialize all TokenRequest fields as claims (except subject)
-        Map claims = objectMapper.convertValue(subject, Map.class);
-        claims.remove("subject"); // Remove subject if you want it only in .withSubject
+        
+        // Serialize all TokenRequest fields as claims
+        Map<String, Object> claims = objectMapper.convertValue(subject, new TypeReference<Map<String, Object>>() {});
 
         return JWT.create()
-                .withSubject(subjectValue)
+                .withSubject(subject.getSubject()) // Use subject field
                 .withIssuer(issuer)
                 .withExpiresAt(new Date(System.currentTimeMillis() + 86400000)) // 1 day expiration
                 .withPayload(claims)
@@ -91,6 +131,40 @@ public class JwtService {
         }
     }
 
+
+public DecodedJWT validateToken(String token) throws Exception {
+        RSAPublicKey publicKey = getPublicKey();
+        Algorithm rsaAlgorithm = Algorithm.RSA256(publicKey, null);
+        
+        JWTVerifier jwtVerifier = JWT.require(rsaAlgorithm)
+                .withIssuer(issuer)
+                .build();
+                
+        return jwtVerifier.verify(token);
+    }
+
+    public String getUserIdFromToken(String token) throws Exception {
+        DecodedJWT decodedJWT = validateToken(token);
+        return decodedJWT.getClaim("userId").asString();
+    }
+
+    public String getEmailFromToken(String token) throws Exception {
+        DecodedJWT decodedJWT = validateToken(token);
+        return decodedJWT.getSubject();
+    }
+
+    public boolean isTokenExpired(String token) {
+        try {
+            DecodedJWT decodedJWT = validateToken(token);
+            return decodedJWT.getExpiresAt().before(new Date());
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    public long getAccessTokenExpiration() {
+        return accessTokenExpiration;
+    }
 
 @NotNull
 public Map<String, Object> getTokenPayload(TokenDto token) {
