@@ -27,17 +27,20 @@ public class LinkedInOAuthController {
     @Value("${app.frontend.url:http://localhost:3000}")
     private String frontendUrl;
 
+    @Value("${spring.security.oauth2.client.registration.linkedin.redirect-uri:http://localhost:8080/api/v1/sso-service/auth/linkedin/callback}")
+    private String redirectUrl;
+
     @Operation(summary = "LinkedIn OAuth Login", description = "Initiate LinkedIn OAuth flow")
     @GetMapping("/login")
-    public void linkedInLogin(@RequestParam(required = false) String redirect,
-                             HttpServletResponse response) throws Exception {
+    public void linkedInLogin(HttpServletResponse response) throws Exception {
         try {
             String state = UUID.randomUUID().toString();
             // In production, you should store the state and redirect URL in session or cache
             // For simplicity, we'll include redirect in state (encode it properly in production)
-            String stateWithRedirect = state + (redirect != null ? "|" + redirect : "");
+            String stateWithRedirect = state + (redirectUrl != null ? "|" + redirectUrl : "");
             
             String authUrl = linkedInOAuthService.getAuthorizationUrl(stateWithRedirect);
+            log.info("LinkedIn OAuth login url----------------: {}", authUrl);
             response.sendRedirect(authUrl);
         } catch (Exception e) {
             log.error("LinkedIn login initiation failed", e);
@@ -52,6 +55,9 @@ public class LinkedInOAuthController {
                                 @RequestParam(required = false) String error,
                                 HttpServletResponse response) throws Exception {
         try {
+            log.info("LinkedIn OAuth callback url---------------: {}", code);
+            log.info("LinkedIn OAuth callback state--------------: {}", state);
+            log.info("LinkedIn OAuth callback error---------------: {}", error);
             if (error != null) {
                 log.error("LinkedIn OAuth error: {}", error);
                 response.sendRedirect(frontendUrl + "/login?error=linkedin_" + error);

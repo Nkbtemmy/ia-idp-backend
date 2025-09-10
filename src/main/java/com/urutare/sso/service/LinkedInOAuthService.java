@@ -42,18 +42,22 @@ public class LinkedInOAuthService {
     @Value("${linkedin.oauth.token-url:https://www.linkedin.com/oauth/v2/accessToken}")
     private String tokenUrl;
 
-    @Value("${linkedin.oauth.user-info-url:https://api.linkedin.com/v2/people/~:(id,firstName,lastName,emailAddress)}")
+    @Value("${linkedin.oauth.user-info-url:https://api.linkedin.com/v2/people/~:(id,firstName,lastName)}")
     private String userInfoUrl;
 
     @Value("${linkedin.oauth.email-url:https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))}")
     private String emailUrl;
 
+
     public String getAuthorizationUrl(String state) {
+        log.info("Generating LinkedIn OAuth URL with Client ID: {}", clientId);
         String scope = "r_liteprofile r_emailaddress";
-        return String.format(
+        String authUrl = String.format(
             "https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=%s&redirect_uri=%s&state=%s&scope=%s",
             clientId, redirectUri, state, scope
         );
+        log.info("LinkedIn OAuth URL: {}", authUrl);
+        return authUrl;
     }
 
     @Transactional
@@ -107,36 +111,91 @@ public class LinkedInOAuthService {
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
-        // Get basic profile info
-        ResponseEntity<String> profileResponse = restTemplate.exchange(
-            userInfoUrl, HttpMethod.GET, entity, String.class
-        );
+        try {
+            // Get basic profile info
+            log.info("Fetching LinkedIn profile from: {}", userInfoUrl);
+            ResponseEntity<String> profileResponse = restTemplate.exchange(
+                userInfoUrl, HttpMethod.GET, entity, String.class
+            );
 
-        if (profileResponse.getStatusCode() != HttpStatus.OK) {
-            throw new RuntimeException("Failed to get user profile from LinkedIn");
+            if (profileResponse.getStatusCode() != HttpStatus.OK) {
+                log.error("Failed to get LinkedIn profile. Status: {}, Body: {}", 
+                    profileResponse.getStatusCode(), profileResponse.getBody());
+                throw new RuntimeException("Failed to get user profile from LinkedIn");
+            }
+
+            log.info("LinkedIn profile response: {}", profileResponse.getBody());
+            JsonNode profileNode = objectMapper.readTree(profileResponse.getBody());
+
+            // Get email address
+            log.info("Fetching LinkedIn email from: {}", emailUrl);
+            ResponseEntity<String> emailResponse = restTemplate.exchange(
+                emailUrl, HttpMethod.GET, entity, String.class
+            );
+
+            if (emailResponse.getStatusCode() != HttpStatus.OK) {
+                log.error("Failed to get LinkedIn email. Status: {}, Body: {}", 
+                    emailResponse.getStatusCode(), emailResponse.getBody());
+                throw new RuntimeException("Failed to get user email from LinkedIn");
+            }
+
+            log.info("LinkedIn email response: {}", emailResponse.getBody());
+            JsonNode emailNode = objectMapper.readTree(emailResponse.getBody());
+            
+            // Extract email with better error handling
+            String email = null;
+            if (emailNode.has("elements") && emailNode.get("elements").isArray() && 
+                emailNode.get("elements").size() > 0) {
+                JsonNode firstElement = emailNode.get("elements").get(0);
+                if (firstElement.has("handle~") && firstElement.get("handle~").has("emailAddress")) {
+                    email = firstElement.get("handle~").get("emailAddress").asText();
+                }
+            }
+            
+            if (email == null || email.isEmpty()) {
+                throw new RuntimeException("Could not extract email from LinkedIn response");
+            }
+
+            // Extract user information with better error handling
+            String linkedInId = profileNode.get("id").asText();
+            
+            String firstName = "";
+            String lastName = "";
+            
+            if (profileNode.has("firstName") && profileNode.get("firstName").has("localized")) {
+                JsonNode firstNameNode = profileNode.get("firstName").get("localized");
+                // Try different locale keys
+                if (firstNameNode.has("en_US")) {
+                    firstName = firstNameNode.get("en_US").asText();
+                } else if (firstNameNode.size() > 0) {
+                    // Get first available locale
+                    firstName = firstNameNode.elements().next().asText();
+                }
+            }
+            
+            if (profileNode.has("lastName") && profileNode.get("lastName").has("localized")) {
+                JsonNode lastNameNode = profileNode.get("lastName").get("localized");
+                // Try different locale keys
+                if (lastNameNode.has("en_US")) {
+                    lastName = lastNameNode.get("en_US").asText();
+                } else if (lastNameNode.size() > 0) {
+                    // Get first available locale
+                    lastName = lastNameNode.elements().next().asText();
+                }
+            }
+            
+            String fullName = (firstName + " " + lastName).trim();
+            if (fullName.isEmpty()) {
+                fullName = email.split("@")[0]; // Fallback to email prefix
+            }
+
+            log.info("Extracted LinkedIn user info: ID={}, Email={}, Name={}", linkedInId, email, fullName);
+            return new LinkedInUserInfo(linkedInId, email, fullName, firstName, lastName);
+            
+        } catch (Exception e) {
+            log.error("Error fetching LinkedIn user info", e);
+            throw new RuntimeException("Failed to fetch user information from LinkedIn: " + e.getMessage());
         }
-
-        JsonNode profileNode = objectMapper.readTree(profileResponse.getBody());
-
-        // Get email address
-        ResponseEntity<String> emailResponse = restTemplate.exchange(
-            emailUrl, HttpMethod.GET, entity, String.class
-        );
-
-        if (emailResponse.getStatusCode() != HttpStatus.OK) {
-            throw new RuntimeException("Failed to get user email from LinkedIn");
-        }
-
-        JsonNode emailNode = objectMapper.readTree(emailResponse.getBody());
-        String email = emailNode.get("elements").get(0).get("handle~").get("emailAddress").asText();
-
-        // Extract user information
-        String linkedInId = profileNode.get("id").asText();
-        String firstName = profileNode.get("firstName").get("localized").get("en_US").asText();
-        String lastName = profileNode.get("lastName").get("localized").get("en_US").asText();
-        String fullName = firstName + " " + lastName;
-
-        return new LinkedInUserInfo(linkedInId, email, fullName, firstName, lastName);
     }
 
     private UserAccount findOrCreateUser(LinkedInUserInfo userInfo) {
