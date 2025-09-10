@@ -19,8 +19,7 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     
-    @Lob
-    @Column(nullable = false, unique = true, columnDefinition = "TEXT")
+    @Column(nullable = false, unique = true, columnDefinition = "VARCHAR(2048)")
     private String token;
     
     @ManyToOne(fetch = FetchType.LAZY)

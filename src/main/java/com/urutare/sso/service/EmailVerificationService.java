@@ -72,8 +72,9 @@ public class EmailVerificationService {
 
     @Transactional
     public boolean verifyEmail(String token) {
+        log.info("Verifying email:-------------------- {}", token);
         Optional<VerificationToken> verificationTokenOpt = verificationTokenRepository.findByToken(token);
-        
+        log.info("Verification token found****************: {}", verificationTokenOpt);
         if (verificationTokenOpt.isEmpty()) {
             log.warn("Verification token not found: {}", token);
             return false;

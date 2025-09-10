@@ -98,34 +98,20 @@ public class AuthController {
 
     @Operation(summary = "Verify Email", description = "Verify user email with token")
     @GetMapping("/verify-email")
-    public void verifyEmail(@RequestParam String token, 
-                           @RequestParam(required = false) String redirect, 
-                           HttpServletResponse response) throws Exception {
+    public ResponseEntity<?> verifyEmail(@RequestParam String token) {
         try {
             boolean verified = emailVerificationService.verifyEmail(token);
             if (verified) {
-                if (redirect != null && !redirect.isBlank()) {
-                    String sep = redirect.contains("?") ? "&" : "?";
-                    response.sendRedirect(redirect + sep + "verified=true");
-                } else {
-                    response.sendRedirect("/verified.html?status=success");
-                }
+                log.info("Email verified successfully for token: {}", token);
             } else {
-                if (redirect != null && !redirect.isBlank()) {
-                    String sep = redirect.contains("?") ? "&" : "?";
-                    response.sendRedirect(redirect + sep + "verified=false&error=invalid_token");
-                } else {
-                    response.sendRedirect("/verified.html?status=error&message=invalid_token");
-                }
+                log.warn("Email verification failed or token invalid/expired: {}", token);
+                return ResponseEntity.badRequest().body(ApiResponse.fail("Invalid or expired verification token"));
             }
+            log.info("Email verified:-------------------- {}", verified);
+            return ResponseEntity.ok(ApiResponse.ok("Email verified successfully", null));
         } catch (Exception e) {
             log.error("Email verification failed for token: {}", token, e);
-            if (redirect != null && !redirect.isBlank()) {
-                String sep = redirect.contains("?") ? "&" : "?";
-                response.sendRedirect(redirect + sep + "verified=false&error=verification_failed");
-            } else {
-                response.sendRedirect("/verified.html?status=error&message=verification_failed");
-            }
+            return ResponseEntity.badRequest().body(ApiResponse.fail(e.getMessage()));
         }
     }
 
