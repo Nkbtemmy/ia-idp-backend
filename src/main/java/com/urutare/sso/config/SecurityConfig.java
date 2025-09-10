@@ -28,20 +28,26 @@ public class SecurityConfig {
   }
 
   List<String> publicPaths = List.of(
-    "/api/v1/sso-service/auth/**",
-    "/api/v1/sso-service/docs/**",
-    "/api/v1/sso-service/swagger-ui/**",
-    "/error", "/actuator/health",
-     "/.well-known/**", 
-     "/verified.html");
+        "/api/v1/sso-service/auth/**",
+        "/api/v1/sso-service/docs/**",
+        "/api/v1/sso-service/swagger-ui/**",
+          "/api/docs/**",
+        "/error",
+        "/actuator/health",
+         "/.well-known/**",
+        "/verified.html"
+  );
 
   @Bean
   public SecurityFilterChain appSecurityFilterChain(HttpSecurity http) throws Exception {
     http
       .authorizeHttpRequests(auth -> auth
-        .requestMatchers(publicPaths.toArray(new String[0])).permitAll()
-        .anyRequest().authenticated()
-      )
+        .requestMatchers("/**").permitAll()
+      )     
+      // .authorizeHttpRequests(auth -> auth
+      //   .requestMatchers(publicPaths.toArray(new String[0])).permitAll()
+      //   .anyRequest().authenticated()
+      // )
       .formLogin(Customizer.withDefaults())
       .oauth2Login(oauth -> oauth
         .loginPage("/login")
