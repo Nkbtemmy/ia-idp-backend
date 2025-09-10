@@ -31,11 +31,9 @@ public class SecurityConfig {
         "/api/v1/sso-service/auth/**",
         "/api/v1/sso-service/docs/**",
         "/api/v1/sso-service/swagger-ui/**",
-          "/api/docs/**",
         "/error",
         "/actuator/health",
-         "/.well-known/**",
-        "/verified.html"
+         "/.well-known/**"
   );
 
   @Bean
