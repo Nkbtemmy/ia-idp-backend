@@ -16,7 +16,8 @@ public class VerificationToken {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  @Column(nullable = false, unique = true)
+  @Lob
+  @Column(nullable = false, unique = true, columnDefinition = "TEXT")
   private String token;
 
   @ManyToOne(optional = false)

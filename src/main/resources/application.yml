@@ -80,22 +80,13 @@ spring:
             user-name-attribute: id
 
 
-#private:
-#  key:
-#    path: certificates/private_key.pem
-#    password: yourpassword
-#public:
-#  key:
-#    path: certificates/public_key.pem
-
-# Key paths (relative to classpath)
 private:
   key:
-    path: ${PRIVATE_KEY_PATH:keys/private_key.pem}
-    password: ${PRIVATE_KEY_PASSWORD:your-private-key-password}
+    path: certificates/private_key.pem
+    password: yourpassword
 public:
   key:
-    path: ${PUBLIC_KEY_PATH:keys/public_key.pem}
+    path: certificates/public_key.pem
 
 jwt:
   issuer: issub2sds

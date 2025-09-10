@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/sso-service")
+@RequestMapping("/api/v1/sso-service/generate")
 public class JwtController {
 
     private final JwtService jwtService;

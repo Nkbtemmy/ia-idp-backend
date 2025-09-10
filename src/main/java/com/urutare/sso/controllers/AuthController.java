@@ -8,6 +8,7 @@ import com.urutare.sso.dto.RegisterRequest;
 import com.urutare.sso.service.AuthenticationService;
 import com.urutare.sso.service.EmailVerificationService;
 import com.urutare.sso.service.JwtService;
+import com.urutare.sso.service.SeedDataService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
@@ -177,6 +178,63 @@ public class AuthController {
         } catch (Exception e) {
             log.error("Email check failed for: {}", email, e);
             return ResponseEntity.badRequest().body(ApiResponse.fail("Failed to check email availability"));
+        }
+    }
+
+    @RestController
+    @RequestMapping("/api/v1/sso-service/admin/seed")
+    @RequiredArgsConstructor
+    public static class SeedDataController {
+
+        private final SeedDataService seedDataService;
+
+        @PostMapping("/create")
+        public ResponseEntity<Map<String, String>> createSeedData() {
+            try {
+                seedDataService.createDevelopmentData();
+                seedDataService.printSeedDataSummary();
+                return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "message", "Seed data created successfully"
+                ));
+            } catch (Exception e) {
+                return ResponseEntity.internalServerError().body(Map.of(
+                    "status", "error",
+                    "message", "Failed to create seed data: " + e.getMessage()
+                ));
+            }
+        }
+
+        @DeleteMapping("/clear")
+        public ResponseEntity<Map<String, String>> clearAllData() {
+            try {
+                seedDataService.clearAllData();
+                return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "message", "All data cleared successfully"
+                ));
+            } catch (Exception e) {
+                return ResponseEntity.internalServerError().body(Map.of(
+                    "status", "error",
+                    "message", "Failed to clear data: " + e.getMessage()
+                ));
+            }
+        }
+
+        @GetMapping("/summary")
+        public ResponseEntity<Map<String, String>> getSeedDataSummary() {
+            try {
+                seedDataService.printSeedDataSummary();
+                return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "message", "Check logs for seed data summary"
+                ));
+            } catch (Exception e) {
+                return ResponseEntity.internalServerError().body(Map.of(
+                    "status", "error",
+                    "message", "Failed to get summary: " + e.getMessage()
+                ));
+            }
         }
     }
 }

@@ -56,10 +56,10 @@ public class AuthenticationService {
                 .build();
 
         user = userRepository.save(user);
-        log.info("New user registered: {}", user.getEmail());
-
+        log.info("New user registered--------------: {}", user.getEmail());
+//        String token =
         // Send verification email
-        emailVerificationService.sendVerificationEmail(user);
+//        emailVerificationService.sendVerificationEmail(user);
 
         // Generate tokens (user can use the app but with limited access until verified)
         return generateAuthResponse(user);
@@ -142,6 +142,7 @@ public class AuthenticationService {
     public AuthResponse generateAuthResponse(UserAccount user) {
         try {
             // Generate access token
+            log.info("Generating auth response for user:------------------ {}", user.getEmail());
             String accessToken = jwtService.generateAccessToken(user);
             
             // Generate refresh token

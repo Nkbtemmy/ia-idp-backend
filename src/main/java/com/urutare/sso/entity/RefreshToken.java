@@ -19,7 +19,8 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     
-    @Column(nullable = false, unique = true)
+    @Lob
+    @Column(nullable = false, unique = true, columnDefinition = "TEXT")
     private String token;
     
     @ManyToOne(fetch = FetchType.LAZY)

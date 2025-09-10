@@ -51,6 +51,7 @@ public class EmailVerificationService {
 
             // Create new verification token
             String token = UUID.randomUUID().toString();
+            System.out.println("Generated token--------: " + token); // Debugging line
             VerificationToken verificationToken = new VerificationToken(
                 token,
                 user,
