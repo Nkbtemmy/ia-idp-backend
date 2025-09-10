@@ -161,6 +161,7 @@ public class AuthenticationService {
                     .id(user.getId().toString())
                     .email(user.getEmail())
                     .name(user.getName())
+                    .roles(user.getRoles())
                     .emailVerified(user.isEmailVerified())
                     .provider(user.getProvider().name())
                     .build();

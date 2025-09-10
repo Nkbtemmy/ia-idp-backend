@@ -107,6 +107,25 @@ public class JwtService {
                 .sign(rsaAlgorithm);
     }
 
+    /** Generic token generation method */
+    private String generateToken(UserAccount user, long expirationMillis, String type) throws Exception {
+        RSAPrivateKey privateKey = getPrivateKey();
+        Algorithm rsaAlgorithm = Algorithm.RSA256(null, privateKey);
+        return JWT.create()
+                .withSubject(user.getEmail())
+                .withIssuer(issuer)
+                .withClaim("userId", user.getId().toString())
+                .withClaim("email", user.getEmail())
+                .withClaim("name", user.getName())
+                .withClaim("roles", user.getRoles().stream().map(Enum::name).toList())
+                .withClaim("provider", user.getProvider().name())
+                .withClaim("emailVerified", user.isEmailVerified())
+                .withClaim("type", type)
+                .withIssuedAt(new Date())
+                .withExpiresAt(new Date(System.currentTimeMillis() + expirationMillis))
+                .sign(rsaAlgorithm);
+    }
+
     public void verifyJwtToken(String token) {
         try {
             RSAPublicKey publicKey = getPublicKey();

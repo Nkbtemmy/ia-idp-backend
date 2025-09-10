@@ -4,10 +4,10 @@ server:
 app:
   name: ${APP_NAME:SSO Service}
   frontend:
-    url: ${FRONTEND_URL:http://localhost:3000}
+    url: ${FRONTEND_URL:http://localhost:5500}
 
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:2080,http://localhost:3001,http://127.0.0.1:5500}
     allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,OPTIONS}
     allowed-headers: ${CORS_ALLOWED_HEADERS:*}
     allow-credentials: ${CORS_ALLOW_CREDENTIALS:true}
@@ -29,7 +29,7 @@ spring:
       minimum-idle: 5
       maximum-pool-size: 20
       auto-commit: true
-      idle-timeout: 30000
+      idle-timeout: 55000
       pool-name: HikariPool-Dev
       connection-timeout: 20000
       validation-timeout: 5000

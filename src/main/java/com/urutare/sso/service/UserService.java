@@ -121,6 +121,11 @@ public class UserService {
     }
   }
 
+  public UserAccount findByEmail(String email) {
+    return userRepository.findByEmailIgnoreCase(email)
+        .orElseThrow(() -> new RuntimeException("User not found or not verified"));
+  }
+
   public AuthenticationSuccessHandler oauth2SuccessHandler() {
     return (request, response, authentication) -> {
       response.sendRedirect("/");

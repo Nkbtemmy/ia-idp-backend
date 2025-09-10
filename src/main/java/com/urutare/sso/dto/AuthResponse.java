@@ -1,9 +1,12 @@
 package com.urutare.sso.dto;
 
+import com.urutare.sso.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.Set;
 
 @Data
 @Builder
@@ -15,6 +18,7 @@ public class AuthResponse {
     private String tokenType = "Bearer";
     private long expiresIn;
     private UserInfo user;
+    private Set<Role> roles;
     
     @Data
     @Builder
@@ -26,5 +30,6 @@ public class AuthResponse {
         private String name;
         private boolean emailVerified;
         private String provider;
+        private Set<Role> roles;
     }
 }

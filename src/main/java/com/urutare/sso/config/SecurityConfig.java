@@ -32,7 +32,7 @@ public class SecurityConfig {
   }
 
   List<String> publicPaths = List.of(
-        "/api/v1/sso-service/auth/**",
+        "/api/v1/sso-service/**",
         "/api/v1/sso-service/docs/**",
         "/api/v1/sso-service/swagger-ui/**",
         "/error",
