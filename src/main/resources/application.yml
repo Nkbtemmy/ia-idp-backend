@@ -62,15 +62,13 @@ spring:
       client:
         registration:
           linkedin:
-            client-id: "${LINKEDIN_CLIENT_ID:7734567rewwdp}"
+            client-id: "${LINKEDIN_CLIENT_ID:77dzq642rewwdp}"
             client-secret: "${LINKEDIN_CLIENT_SECRET:WPL_AP1.N897657jhQ.bDrUJA==t}"
-            client-name: LinkedIn
+            redirect-uri: "${LINKEDIN_REDIRECT_URI:http://localhost:8080/api/v1/sso-service/auth/linkedin/callback}"
             authorization-grant-type: authorization_code
-            redirect-uri: ${LINKEDIN_REDIRECT_URI:http://localhost:8080/api/v1/sso-service/auth/linkedin/callback}
-#            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-            scope:
-              - r_liteprofile
-              - r_emailaddress
+            scope: openid,profile,email
+            client-name: LinkedIn
+
         provider:
           linkedin:
             authorization-uri: https://www.linkedin.com/oauth/v2/authorization
@@ -99,9 +97,9 @@ jwt:
 linkedin:
   oauth:
     token-url: https://www.linkedin.com/oauth/v2/accessToken
-    user-info-url: https://api.linkedin.com/v2/people/~:(id,firstName,lastName)
+    user-info-url: https://api.linkedin.com/v2/userinfo
+    profile-url: https://api.linkedin.com/v2/people/~
     email-url: https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))
-
 
 # Logging
 logging:
