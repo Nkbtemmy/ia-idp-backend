@@ -1,5 +1,5 @@
 server:
-  port: 2080
+  port: ${SERVER_PORT:2080}
 # Application Configuration
 app:
   name: ${APP_NAME:SSO Service}
@@ -115,10 +115,11 @@ logging:
 
 # Swagger/OpenAPI
 springdoc:
+  pathsToMatch: "/api/**"
   api-docs:
-    path: /api/v1/sso-service/docs
+    path: "/api/v1/sso-service/api-docs"
   swagger-ui:
-    path: /api/v1/sso-service/swagger-ui.html
+    path: "/api/v1/sso-service/docs"
 
 # Management endpoints
 management:
